@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>대전 맛투어 디지털 로드맵</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', '"Noto Sans KR"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+            },
+            colors: {
+              slate: {
+                950: '#020617',
+              }
+            },
+            animation: {
+              'spin-slow': 'spin 12s linear infinite',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      /* Fallback/Custom scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.3);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Animated dash style for active map route path */
+      @keyframes dash {
+        to {
+          stroke-dashoffset: -12;
+        }
+      }
+      .map-line-dash {
+        stroke-dasharray: 6;
+        animation: dash 1.5s linear infinite;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden antialiased relative">
+    
+    <!-- Mesh Gradient Background Blobs for Frosted Glass effect -->
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute top-1/3 -right-24 w-80 h-80 bg-teal-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute bottom-1/4 left-1/3 w-64 h-64 bg-rose-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+
+    <!-- Header -->
+    <header class="bg-white/5 backdrop-blur-xl border-b border-white/10 sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0">
+            <i data-lucide="compass" class="w-5 h-5 text-white animate-spin-slow"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-sm sm:text-base tracking-tight text-white flex items-center gap-2">
+              <span>대전 웰니스 맛투어 로드맵</span>
+              <span class="bg-teal-500/20 text-teal-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal-500/30">v2.0</span>
+            </h1>
+            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider hidden sm:block">Smart Wellness Gourmet Guide</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <div class="hidden md:flex items-center bg-slate-900/50 rounded-full px-3 py-1.5 border border-white/5">
+            <div class="w-2 h-2 bg-teal-400 rounded-full animate-pulse mr-2"></div>
+            <span class="text-[10px] font-bold tracking-wider text-slate-300">LIVE TRAFFIC: OPTIMAL</span>
+          </div>
+
+          <button 
+            id="btn-taxi-modal"
+            class="flex items-center space-x-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white border border-white/10 font-bold py-2 px-3 sm:px-4 rounded-xl text-xs transition duration-200 cursor-pointer"
+          >
+            <i data-lucide="car" class="w-4 h-4 text-teal-400"></i>
+            <span>빵택시 & 시티버스 팁</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+      
+      <!-- Left Side: Map and Filters and Restaurant list (7 columns) -->
+      <section class="lg:col-span-7 space-y-6">
+        
+        <!-- Map Card -->
+        <div id="map-card" class="bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <h3 class="font-bold text-lg text-white flex items-center gap-2 mb-2">
+            <i data-lucide="map-pinned" class="w-5 h-5 text-indigo-400"></i>
+            <span>출발지별 실시간 대전행 교통 효율 맵</span>
+          </h3>
+          <p class="text-xs text-slate-400 mb-6">지도에서 출발지를 클릭하여 대전역까지 가장 빠르고 시원한 교통수단을 비교해보세요.</p>
+
+          <!-- Interactive SVG Map & Route Data Combined Layout -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              
+            <!-- SVG Interactive Transit Map (5 Cols) -->
+            <div class="md:col-span-5 bg-slate-950/40 p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-center relative">
+              <span class="absolute top-3 left-3 text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Interactive Map</span>
+              
+              <svg class="w-full max-w-[240px] h-[340px]" viewBox="0 0 400 500">
+                <!-- Connection lines (controlled by JS) -->
+                <line id="line-seoul" x1="160" y1="110" x2="220" y2="280" stroke="#1e293b" stroke-width="1.5" style="transition: all 0.3s;" />
+                <line id="line-incheon" x1="100" y1="130" x2="220" y2="280" stroke="#1e293b" stroke-width="1.5" style="transition: all 0.3s;" />
+                <line id="line-ansan" x1="110" y1="170" x2="220" y2="280" stroke="#1e293b" stroke-width="1.5" style="transition: all 0.3s;" />
+                <line id="line-suwon" x1="170" y1="180" x2="220" y2="280" stroke="#1e293b" stroke-width="1.5" style="transition: all 0.3s;" />
+                <line id="line-gwangju" x1="140" y1="410" x2="220" y2="280" stroke="#1e293b" stroke-width="1.5" style="transition: all 0.3s;" />
+                <line id="line-busan" x1="330" y1="420" x2="220" y2="280" stroke="#1e293b" stroke-width="1.5" style="transition: all 0.3s;" />
+
+                <!-- Target Hub: Daejeon -->
+                <g id="node-daejeon" class="cursor-default">
+                  <circle cx="220" cy="280" r="16" fill="#0f172a" stroke="#2dd4bf" stroke-width="4" />
+                  <circle cx="220" cy="280" r="6" fill="#2dd4bf" class="animate-ping opacity-75" />
+                  <circle cx="220" cy="280" r="5" fill="#2dd4bf" />
+                  <text x="220" y="318" fill="#2dd4bf" font-size="12" font-weight="bold" text-anchor="middle">대전 (도착지)</text>
+                </g>
+
+                <!-- Departure Nodes -->
+                <!-- Seoul -->
+                <g id="node-seoul" class="cursor-pointer group select-none">
+                  <circle cx="160" cy="110" r="9" fill="#1e293b" stroke="#6366f1" stroke-width="2" style="transition: all 0.2s;" />
+                  <circle cx="160" cy="110" r="4" fill="#6366f1" />
+                  <text x="160" y="91" fill="#cbd5e1" font-size="11" font-weight="600" text-anchor="middle">서울</text>
+                </g>
+
+                <!-- Incheon -->
+                <g id="node-incheon" class="cursor-pointer group select-none">
+                  <circle cx="100" cy="130" r="9" fill="#1e293b" stroke="#6366f1" stroke-width="2" style="transition: all 0.2s;" />
+                  <circle cx="100" cy="130" r="4" fill="#6366f1" />
+                  <text x="70" y="134" fill="#cbd5e1" font-size="11" font-weight="600" text-anchor="middle">인천</text>
+                </g>
+
+                <!-- Ansan -->
+                <g id="node-ansan" class="cursor-pointer group select-none">
+                  <circle cx="110" cy="170" r="10" fill="#1e293b" stroke="#38bdf8" stroke-width="3" style="transition: all 0.2s;" />
+                  <circle cx="110" cy="170" r="4" fill="#38bdf8" />
+                  <text x="72" y="174" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">안산 📍</text>
+                </g>
+
+                <!-- Suwon -->
+                <g id="node-suwon" class="cursor-pointer group select-none">
+                  <circle cx="170" cy="180" r="9" fill="#1e293b" stroke="#6366f1" stroke-width="2" style="transition: all 0.2s;" />
+                  <circle cx="170" cy="180" r="4" fill="#6366f1" />
+                  <text x="205" y="184" fill="#cbd5e1" font-size="11" font-weight="600" text-anchor="middle">수원</text>
+                </g>
+
+                <!-- Gwangju -->
+                <g id="node-gwangju" class="cursor-pointer group select-none">
+                  <circle cx="140" cy="410" r="9" fill="#1e293b" stroke="#6366f1" stroke-width="2" style="transition: all 0.2s;" />
+                  <circle cx="140" cy="410" r="4" fill="#6366f1" />
+                  <text x="140" y="435" fill="#cbd5e1" font-size="11" font-weight="600" text-anchor="middle">광주</text>
+                </g>
+
+                <!-- Busan -->
+                <g id="node-busan" class="cursor-pointer group select-none">
+                  <circle cx="330" cy="420" r="9" fill="#1e293b" stroke="#6366f1" stroke-width="2" style="transition: all 0.2s;" />
+                  <circle cx="330" cy="420" r="4" fill="#6366f1" />
+                  <text x="330" y="445" fill="#cbd5e1" font-size="11" font-weight="600" text-anchor="middle">부산</text>
+                </g>
+              </svg>
+            </div>
+
+            <!-- Real-time Route Efficiency Details (7 Cols) -->
+            <div class="md:col-span-7 space-y-4">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">선택된 출발지 :</span>
+                <span id="activeDepName" class="text-sm font-extrabold text-teal-400 px-2.5 py-1 bg-teal-500/20 border border-teal-500/30 rounded-lg">
+                  안산시 📍
+                </span>
+              </div>
+
+              <!-- Main Recommendation Panel -->
+              <div class="bg-slate-950/40 border border-white/10 p-4 rounded-2xl">
+                <p class="text-xs font-semibold text-indigo-400 flex items-center gap-1">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                  <span>최적의 이동조합 추천</span>
+                </p>
+                <p id="routeRecommend" class="text-sm font-bold text-slate-100 mt-1 leading-relaxed">
+                  수원역까지 수인분당선 이동 후 KTX를 환승하거나, 터미널 고속버스를 타는 것보다 KTX 환승이 압도적으로 빠르고 쾌적합니다!
+                </p>
+              </div>
+
+              <!-- Transit Breakdown Graph Bars -->
+              <div class="space-y-3" id="transitGraphContainer">
+                <!-- Injected dynamically by JavaScript -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 space-y-5 shadow-lg relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-teal-400/5 rounded-full blur-2xl pointer-events-none"></div>
+
+          <!-- Search Input -->
+          <div class="relative">
+            <i data-lucide="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5"></i>
+            <input 
+              type="text" 
+              id="searchInput"
+              placeholder="맛집 이름, 시그니처 메뉴, 태그 키워드 검색 (예: 스마일, 뇨끼, 마들렌...)" 
+              class="w-full pl-11 pr-4 py-3 rounded-2xl border border-white/10 bg-slate-950/40 text-slate-200 focus:bg-slate-950/60 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-sm placeholder-slate-500"
+            />
+          </div>
+
+          <!-- Food Category Filters -->
+          <div class="space-y-2">
+            <span class="text-xs font-bold text-slate-400 tracking-wider uppercase block">푸드 카테고리 세분화</span>
+            <div class="flex flex-wrap gap-1.5" id="categoryContainer">
+              <!-- Injected dynamically by JS -->
+            </div>
+          </div>
+
+          <!-- Subway / Walk filter -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-white/10 gap-3">
+            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+              <span class="text-sky-400">❄️</span>
+              <span>무더위 최적화 뚜벅이 안심 필터</span>
+            </span>
+            <button 
+              id="btn-subway-filter"
+              class="flex items-center space-x-1.5 text-xs font-bold px-4 py-2.5 rounded-xl transition cursor-pointer border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300"
+            >
+              <i data-lucide="train" class="w-4 h-4 text-teal-400"></i>
+              <span>지하철역 매우 가까움 (도보 10분내)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Restaurants List Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="restaurantGrid">
+          <!-- Injected dynamically by JS -->
+        </div>
+
+      </section>
+
+      <!-- Right Side: Travel Itinerary Sequence (5 columns) -->
+      <section class="lg:col-span-5">
+        <aside id="itinerary-sidebar" class="bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 overflow-hidden lg:sticky lg:top-24 shadow-2xl">
+          
+          <!-- Itinerary Header -->
+          <div class="bg-white/5 p-5 border-b border-white/10 flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-base text-white flex items-center gap-2">
+                <i data-lucide="route" class="w-5 h-5 text-teal-400"></i>
+                <span>나의 대전 여행 로드맵</span>
+              </h3>
+              <p id="itineraryStatusText" class="text-xs text-slate-400 mt-1">
+                맛집 카드에서 내 일정을 설계해 보세요
+              </p>
+            </div>
+            <button 
+              id="btnClearAll"
+              class="hidden text-xs bg-white/10 hover:bg-white/20 text-slate-300 py-1.5 px-3 rounded-lg border border-white/5 transition active:scale-95 flex items-center gap-1 font-semibold cursor-pointer"
+            >
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              <span>초기화</span>
+            </button>
+          </div>
+
+          <!-- Dynamic Step-by-Step List -->
+          <div class="p-6 space-y-4 max-h-[50vh] overflow-y-auto" id="itineraryContainer">
+            <!-- Injected dynamically by JS -->
+          </div>
+
+          <!-- Call to Action Footer -->
+          <div class="p-6 bg-slate-950/50 border-t border-white/10 space-y-4">
+            <button 
+              id="btnCopyRoadmap"
+              class="w-full flex items-center justify-center space-x-2 bg-indigo-500 hover:bg-indigo-600 active:scale-95 text-white font-bold py-3 px-4 rounded-2xl transition shadow-lg shadow-indigo-500/20 text-sm cursor-pointer"
+            >
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              <span>내 카톡/메모장으로 일정 복사하기</span>
+            </button>
+            <p class="text-[10px] text-slate-500 text-center leading-normal">
+              선택한 맛집 위치와 동선을 복사하여 대중교통 경로 탐색기나 지도 어플에 바로 붙여넣어 연동해 보세요!
+            </p>
+          </div>
+
+        </aside>
+      </section>
+
+    </main>
+
+    <!-- Footer copyright -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-8 mt-12 relative z-10">
+      <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-2">
+        <p>© 2026 대전 맛투어 디지털 가이드 - 트렌디한 감각의 고품격 여행 플래너</p>
+        <p class="text-[10px] text-slate-600">지도 데이터를 바탕으로 가장 효율적인 실시간 이동수단이 자동 계산됩니다.</p>
+      </div>
+    </footer>
+
+    <!-- Overlay / Taxi modal -->
+    <div id="taxiModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm hidden transition-all duration-300">
+      <div 
+        id="taxi-modal-content"
+        class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl transform scale-100 transition-all duration-300 relative"
+      >
+        <div class="bg-indigo-950/80 p-6 text-white relative border-b border-slate-800">
+          <button 
+            id="btn-taxi-modal-x"
+            class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl transition active:scale-95 p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+            title="닫기"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+          <div class="flex items-center space-x-3">
+            <span class="text-3xl">🚖</span>
+            <div>
+              <h3 class="font-bold text-lg text-white">대전 빵택시 & 시티버스 100% 활용법</h3>
+              <p class="text-xs text-teal-400 mt-0.5">땀 한 방울 흘리지 않고 즐기는 대전 빵지순례</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Content Body -->
+        <div class="p-6 space-y-5 max-h-[60vh] overflow-y-auto text-sm leading-relaxed text-slate-300">
+          <div class="bg-slate-950/50 border border-slate-800 p-4 rounded-2xl flex gap-3">
+            <i data-lucide="info" class="w-5 h-5 text-teal-400 shrink-0 mt-0.5"></i>
+            <div>
+              <p class="font-bold text-white text-xs">
+                대전 '빵택시' 운행 공식 정보
+              </p>
+              <p class="text-xs text-slate-400 mt-1.5 leading-normal">
+                기존의 개인 단위의 즉흥 탑승 대신, 현재는 <strong className="text-teal-400">고급형 제휴 모빌리티 서비스</strong> 또는 관광 여행 연계 플랫폼(연트래블 등)의 패키지 투어 형태로 안전하고 쾌적하게 운행되고 있습니다. 사전에 빵택시 예약 전용 채널을 통해 차량 예약을 확인하는 것이 좋습니다.
+              </p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <h4 class="font-bold text-white text-xs border-b border-slate-800 pb-1.5 flex items-center gap-1.5">
+              <span>💡 예약이 어려울 때의 완벽한 뚜벅이 대안</span>
+            </h4>
+            <ul class="space-y-4 text-xs">
+              <li class="flex items-start gap-2.5">
+                <span class="bg-indigo-900/40 border border-indigo-500/30 text-indigo-300 text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  1
+                </span>
+                <div>
+                  <p class="font-semibold text-slate-200 flex items-center gap-1">
+                    <i data-lucide="bus" class="w-3.5 h-3.5 text-indigo-400"></i>
+                    <span>대전시 주관 '대찬 버스 - 빵시투어' 이용</span>
+                  </p>
+                  <p class="text-slate-400 mt-1">
+                    대형 시티투어 순환형 버스를 통해 매우 저렴하고 에어컨이 빵빵한 전용 버스로 대흥동, 자양동, 은행동의 주요 베이커리를 동선 낭비 없이 완주할 수 있습니다.
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="bg-indigo-900/40 border border-indigo-500/30 text-indigo-300 text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  2
+                </span>
+                <div>
+                  <p class="font-semibold text-slate-200 flex items-center gap-1">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-indigo-400"></i>
+                    <span>지하철 1호선 노선 밀집 이용</span>
+                  </p>
+                  <p class="text-slate-400 mt-1">
+                    정동문화사, 카라멜 등 유명 명소가 모여 있어 여름에도 무리 없이 투어가 가능합니다.
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Modal Action Footer -->
+        <div class="p-4 bg-slate-950/60 border-t border-slate-800 flex justify-end">
+          <button 
+            id="btn-taxi-modal-close"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2.5 px-6 rounded-xl transition text-xs active:scale-95 cursor-pointer"
+          >
+            확인완료
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Toast Component -->
+    <div 
+      id="toastNotification" 
+      class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-slate-100 text-xs font-semibold px-6 py-3.5 rounded-2xl shadow-2xl border border-slate-700 z-50 flex items-center space-x-2 hidden"
+      style="transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+    >
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-teal-400 shrink-0"></i>
+      <span id="toastMessage">일정이 등록되었습니다.</span>
+    </div>
+
+    <!-- Master Script (State & Vanilla JS logic) -->
+    <script>
+      // Global database
+      const departuresData = {
+        ansan: {
+          name: "안산시 📍",
+          bestRecommend: "수원역까지 수인분당선 이동 후 KTX를 환승하거나, 터미널 고속버스를 타는 것보다 KTX 환승이 압도적으로 빠르고 쾌적합니다!",
+          transports: [
+            { name: "수원역 환승 + KTX (추천)", time: "1시간 20분", efficiency: "최상 (피로도 없음)", pct: 100, isBest: true },
+            { name: "광명역 자차/택시 + KTX", time: "1시간 30분", efficiency: "우수 (연결 차편 확인 필요)", pct: 85, isBest: false },
+            { name: "안산버스터미널 고속버스", time: "1시간 55분", efficiency: "보통 (교통체증 우려)", pct: 60, isBest: false }
+          ]
+        },
+        seoul: {
+          name: "서울특별시",
+          bestRecommend: "서울역에서 KTX를 타고 대전역까지 1시간 만에 돌파하는 것이 정석입니다. 강남권 출발의 경우 수서역 SRT가 훨씬 쾌적합니다.",
+          transports: [
+            { name: "서울역 KTX 직행", time: "1시간 00분", efficiency: "최상 (배차간격 10분)", pct: 100, isBest: true },
+            { name: "수서역 SRT 직행", time: "1시간 03분", efficiency: "최상 (강남권 최적)", pct: 98, isBest: false },
+            { name: "서울고속버스터미널 버스", time: "2시간 00분", efficiency: "보통 (주말 체증)", pct: 50, isBest: false }
+          ]
+        },
+        incheon: {
+          name: "인천광역시",
+          bestRecommend: "검암/인천역에서 송도역 KTX(개통 예정 포함)를 이용하거나, 광명역으로 가는 셔틀버스를 탄 후 KTX를 타는 노선이 정체 부담이 적습니다.",
+          transports: [
+            { name: "광명역 이동 KTX 연계", time: "1시간 40분", efficiency: "우수", pct: 90, isBest: true },
+            { name: "인천 종합터미널 시외버스", time: "2시간 10분", efficiency: "보통", pct: 65, isBest: false },
+            { name: "자차 이동 (서해안 고속도로)", time: "2시간 00분", efficiency: "피로도 있음", pct: 55, isBest: false }
+          ]
+        },
+        suwon: {
+          name: "수원시",
+          bestRecommend: "수원역에서 출발하는 KTX 직행 혹은 가성비가 훌륭한 ITX-새마을을 타는 것이 가장 빠르고 확실한 뚜벅이 코스입니다.",
+          transports: [
+            { name: "수원역 KTX 직행", time: "1시간 10분", efficiency: "최상", pct: 100, isBest: true },
+            { name: "ITX-새마을 / 무궁화호", time: "1시간 30분", efficiency: "가성비 극대화", pct: 85, isBest: false },
+            { name: "수원 버스터미널 직행", time: "1시간 45분", efficiency: "보통", pct: 60, isBest: false }
+          ]
+        },
+        gwangju: {
+          name: "광주광역시",
+          bestRecommend: "광주송정역에서 오송역 경유 KTX를 타거나 호남선 직행 KTX를 타고 대전조차장/서대전역으로 직행하시는 것을 최우선으로 권장합니다.",
+          transports: [
+            { name: "광주송정역 KTX 직행", time: "1시간 25분", efficiency: "우수", pct: 95, isBest: true },
+            { name: "유스퀘어 고속버스 직행", time: "2시간 15분", efficiency: "보통", pct: 65, isBest: false }
+          ]
+        },
+        busan: {
+          name: "부산광역시",
+          bestRecommend: "부산역에서 경부선 KTX를 타면 중간 정차역이 적어 대전역까지 1시간 40분 이내에 주파하는 초쾌속 이동이 가능합니다.",
+          transports: [
+            { name: "부산역 KTX 직행", time: "1시간 38분", efficiency: "최상 (쾌적)", pct: 100, isBest: true },
+            { name: "부산서부버스터미널 고속버스", time: "3시간 00분", efficiency: "피로도 높음", pct: 40, isBest: false }
+          ]
+        }
+      };
+
+      const restaurants = [
+        {
+          id: 1,
+          name: "미소본가 스마일칼국수",
+          category: "korean",
+          subway: "중앙로역 (도보 8분)",
+          nearSubway: true,
+          menu: "손칼국수, 부추가득 김밥, 수육",
+          description: "백종원의 3대천왕 손칼국수 명가. 부드럽고 쫄깃한 자가제면 손면발에 들깨가루와 참기름 가득 김밥을 국물에 적셔 드시는 극락의 맛.",
+          tips: "일요일 정기 휴무이므로, 월요일 도착 직후 첫 점심식사로 강력추천!",
+          icon: "🍚",
+          tags: ["손칼국수", "김밥필수", "백종원3대천왕"]
+        },
+        {
+          id: 2,
+          name: "정동문화사",
+          category: "dessert",
+          subway: "대전역 (도보 10분)",
+          nearSubway: true,
+          menu: "휘낭시에, 까눌레, 에그타르트",
+          description: "구움과자 애호가들이 전국에서 줄 서는 명품 디저트숍. 한 번 맛보면 잊지 못하는 극강의 바삭함과 촉촉한 속결이 일품입니다.",
+          tips: "조기 품절률이 대전 내 탑티어급으로 높으니 오전에 최우선으로 빵택시 찍고 가세요!",
+          icon: "🧁",
+          tags: ["구움과자성지", "겉바속촉", "오픈런필수"]
+        },
+        {
+          id: 3,
+          name: "몽심 (도안점 / 한남대본점)",
+          category: "dessert",
+          subway: "자차/택시 추천",
+          nearSubway: false,
+          menu: "밀키 연유 마들렌, 에그타르트",
+          description: "대전 로컬 빵 축제 어워즈에서 성심당을 뒤흔들며 마들렌 강자로 떠오른 디저트 전문점. 밀키 연유 마들렌은 선물 패키지용으로 최고.",
+          tips: "빵택시나 택시를 타고 안전하고 쾌적하게 방문하시는 것을 추천드립니다.",
+          icon: "🧁",
+          tags: ["마들렌1위", "로컬인기폭발", "구움과자"]
+        },
+        {
+          id: 4,
+          name: "빵 한모금",
+          category: "dessert",
+          subway: "동구 자양동 (버스/택시 8분)",
+          nearSubway: false,
+          menu: "시그니처 미트파이, 결 살아있는 크로아상",
+          description: "프랑스 정통 페이스트리 결을 유지하며 가벼우면서도 바삭한 완벽한 풍미를 내는 곳. 짭조름한 미트파이는 대중적인 취향을 저격합니다.",
+          tips: "매콤한 맛도 선택 가능하므로, 든든하고 캐주얼한 브런치로 적극 활용해보세요.",
+          icon: "🧁",
+          tags: ["미트파이", "결페이스트리", "빵지순례"]
+        },
+        {
+          id: 5,
+          name: "태화장 (Taehwajang)",
+          category: "chinese",
+          subway: "대전역 (도보 7분)",
+          nearSubway: true,
+          menu: "수제 멘보샤, 난자완스, 삼선간짜장",
+          description: "성시경의 '먹을텐데'에 소개된 50년 정통 중식 노포. 빵빵하고 육즙 가득한 멘보샤는 식빵 두께보다 다진 새우가 3배 두꺼워 호평 일색.",
+          tips: "주말에는 항상 긴 줄이 늘어서므로 브레이크 타임 직후를 공략하는 것이 현명합니다.",
+          icon: "🍜",
+          tags: ["백년가게", "성시경맛집", "멘보샤우수"]
+        },
+        {
+          id: 6,
+          name: "토미야 (Tomiya)",
+          category: "japanese",
+          subway: "정부청사역 (도보 12분 / 택시권장)",
+          nearSubway: false,
+          menu: "냉 붓카케 우동, 바삭한 야채/닭 튀김",
+          description: "일본 사누키 전통 수타 방식을 고수해 만든 압도적인 면 탄력을 가진 일식 수제 우동 전문점. 쫄깃쫄깃 입안을 치는 식감이 예술.",
+          tips: "여름철 더위를 날리는 차가운 붓카케 우동에 바삭한 가라아게 튀김 토핑을 조합해 보세요.",
+          icon: "🍣",
+          tags: ["사누키자가제면", "냉우동명소", "대기필수"]
+        },
+        {
+          id: 7,
+          name: "카라멜 (KARAMEL)",
+          category: "western",
+          subway: "중앙로역 (도보 7분)",
+          nearSubway: true,
+          menu: "시그니처 버섯뇨끼, 알배추 샐러드, 라자냐",
+          description: "감성 가득한 모던하고 힙한 인테리어 속에서 즐기는 이탈리안 다이닝. 부드러우면서도 쫀득하게 씹히는 버섯 뇨끼는 단연 압도적 만족감.",
+          tips: "미리 모바일 대기 앱을 켜서 웨이팅을 체크하고 방문하시는 것이 편합니다.",
+          icon: "🍝",
+          tags: ["캐주얼양식", "버섯뇨끼대표", "힙한감성"]
+        },
+        {
+          id: 8,
+          name: "남씨네 떡집",
+          category: "dessert",
+          subway: "서대전네거리역 (도보 12분)",
+          nearSubway: false,
+          menu: "과일 생크림 찹쌀떡, 쑥 인절미",
+          description: "빵의 대전에서 전통 떡에 신세대 과일&생크림 감성을 융합하여 떡지순례 유행을 일으킨 로컬 명소. 얇고 쫀득한 피가 달콤합니다.",
+          tips: "냉장고에 잠시 넣어 차갑게 해서 아이스크림처럼 베어 먹는 방식이 베스트!",
+          icon: "🧁",
+          tags: ["퓨전떡집", "생크림찹쌀떡", "시원한디저트"]
+        }
+      ];
+
+      const categories = [
+        { code: 'all', label: '전체보기' },
+        { code: 'korean', label: '🍚 한식' },
+        { code: 'chinese', label: '🍜 중식' },
+        { code: 'japanese', label: '🍣 일식' },
+        { code: 'western', label: '🍝 양식' },
+        { code: 'dessert', label: '🧁 디저트 (빵·케이크·떡)' },
+      ];
+
+      // Application state
+      const state = {
+        selectedDeparture: localStorage.getItem('daejeon_tour_pref_dep') || 'ansan',
+        activeCategory: 'all',
+        filterNearSubway: false,
+        searchQuery: '',
+        itinerary: [],
+      };
+
+      // Load itinerary safely
+      try {
+        const saved = localStorage.getItem('daejeon_tour_itinerary');
+        if (saved) {
+          state.itinerary = JSON.parse(saved);
+        }
+      } catch (e) {
+        state.itinerary = [];
+      }
+
+      // Initialize UI elements
+      window.addEventListener('DOMContentLoaded', () => {
+        setupEventListeners();
+        renderAll();
+      });
+
+      function setupEventListeners() {
+        // Departure Selection (SVG Clicks)
+        const deps = ['ansan', 'seoul', 'incheon', 'suwon', 'gwangju', 'busan'];
+        deps.forEach(dep => {
+          const node = document.getElementById(`node-${dep}`);
+          if (node) {
+            node.addEventListener('click', () => {
+              state.selectedDeparture = dep;
+              localStorage.setItem('daejeon_tour_pref_dep', dep);
+              renderMap();
+              renderItinerary();
+            });
+          }
+        });
+
+        // Search Query Event
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+          state.searchQuery = e.target.value;
+          renderRestaurants();
+        });
+
+        // Subway Filter Toggle
+        const subwayBtn = document.getElementById('btn-subway-filter');
+        subwayBtn.addEventListener('click', () => {
+          state.filterNearSubway = !state.filterNearSubway;
+          if (state.filterNearSubway) {
+            subwayBtn.className = "flex items-center space-x-1.5 text-xs font-bold px-4 py-2.5 rounded-xl transition cursor-pointer bg-indigo-500 hover:bg-indigo-600 border border-indigo-400/40 text-white shadow-md shadow-indigo-500/20";
+          } else {
+            subwayBtn.className = "flex items-center space-x-1.5 text-xs font-bold px-4 py-2.5 rounded-xl transition cursor-pointer border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300";
+          }
+          renderRestaurants();
+        });
+
+        // Clear All Itinerary button
+        document.getElementById('btnClearAll').addEventListener('click', () => {
+          state.itinerary = [];
+          localStorage.setItem('daejeon_tour_itinerary', JSON.stringify([]));
+          renderRestaurants();
+          renderItinerary();
+          showToast("일정표가 깨끗하게 초기화되었습니다.");
+        });
+
+        // Copy Roadmap CTA
+        document.getElementById('btnCopyRoadmap').addEventListener('click', () => {
+          handleCopyRoadmap();
+        });
+
+        // Modal triggers
+        document.getElementById('btn-taxi-modal').addEventListener('click', () => {
+          document.getElementById('taxiModal').classList.remove('hidden');
+        });
+        document.getElementById('btn-taxi-modal-x').addEventListener('click', () => {
+          document.getElementById('taxiModal').classList.add('hidden');
+        });
+        document.getElementById('btn-taxi-modal-close').addEventListener('click', () => {
+          document.getElementById('taxiModal').classList.add('hidden');
+        });
+      }
+
+      function renderAll() {
+        renderMap();
+        renderCategories();
+        renderRestaurants();
+        renderItinerary();
+        lucide.createIcons();
+      }
+
+      function renderMap() {
+        const depData = departuresData[state.selectedDeparture];
+        document.getElementById('activeDepName').innerText = depData.name;
+        document.getElementById('routeRecommend').innerText = depData.bestRecommend;
+
+        // Visual highlights of lines and nodes in SVG
+        const deps = ['ansan', 'seoul', 'incheon', 'suwon', 'gwangju', 'busan'];
+        deps.forEach(dep => {
+          const isSelected = dep === state.selectedDeparture;
+          const line = document.getElementById(`line-${dep}`);
+          const nodeCircle = document.querySelector(`#node-${dep} circle`);
+          const nodeText = document.querySelector(`#node-${dep} text`);
+
+          if (line) {
+            line.setAttribute('stroke', isSelected ? '#2dd4bf' : '#1e293b');
+            line.setAttribute('stroke-width', isSelected ? '3' : '1.5');
+            if (isSelected) {
+              line.classList.add('map-line-dash');
+            } else {
+              line.classList.remove('map-line-dash');
+            }
+          }
+
+          if (nodeCircle) {
+            nodeCircle.setAttribute('r', isSelected ? '12' : '9');
+            nodeCircle.setAttribute('stroke', isSelected ? '#2dd4bf' : '#6366f1');
+            nodeCircle.setAttribute('stroke-width', isSelected ? '3' : '2');
+          }
+
+          if (nodeText) {
+            nodeText.setAttribute('fill', isSelected ? '#2dd4bf' : '#cbd5e1');
+          }
+        });
+
+        // Render Graph/Transit Options
+        const graphContainer = document.getElementById('transitGraphContainer');
+        graphContainer.innerHTML = '';
+        depData.transports.forEach(t => {
+          const barColor = t.isBest ? 'bg-indigo-500' : 'bg-slate-700';
+          const badge = t.isBest ? `<span class="text-[9px] bg-indigo-500/10 text-indigo-400 px-1.5 py-0.2 rounded border border-indigo-500/20 font-extrabold">최단시간</span>` : '';
+
+          const barHtml = `
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                  ${t.name}
+                  ${badge}
+                </span>
+                <span class="font-medium text-slate-400 text-[11px]">${t.time} (${t.efficiency})</span>
+              </div>
+              <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-850">
+                <div class="${barColor} h-full rounded-full transition-all duration-1000" style="width: ${t.pct}%"></div>
+              </div>
+            </div>
+          `;
+          graphContainer.insertAdjacentHTML('beforeend', barHtml);
+        });
+      }
+
+      function renderCategories() {
+        const container = document.getElementById('categoryContainer');
+        container.innerHTML = '';
+        categories.forEach(cat => {
+          const isActive = cat.code === state.activeCategory;
+          const button = document.createElement('button');
+          button.className = `text-xs font-bold px-4 py-2.5 rounded-xl transition cursor-pointer ${
+            isActive 
+              ? 'bg-indigo-500 text-white font-extrabold shadow-lg shadow-indigo-500/20 border border-indigo-400/30' 
+              : 'bg-white/10 text-slate-300 hover:bg-white/20 border border-white/5'
+          }`;
+          button.innerText = cat.label;
+          button.addEventListener('click', () => {
+            state.activeCategory = cat.code;
+            renderCategories();
+            renderRestaurants();
+          });
+          container.appendChild(button);
+        });
+      }
+
+      function renderRestaurants() {
+        const grid = document.getElementById('restaurantGrid');
+        grid.innerHTML = '';
+
+        // Apply filters
+        const filtered = restaurants.filter(item => {
+          if (state.activeCategory !== 'all' && item.category !== state.activeCategory) return false;
+          if (state.filterNearSubway && !item.nearSubway) return false;
+          if (state.searchQuery.trim() !== '') {
+            const q = state.searchQuery.toLowerCase();
+            const nameMatch = item.name.toLowerCase().includes(q);
+            const menuMatch = item.menu.toLowerCase().includes(q);
+            const tagMatch = item.tags.some(tag => tag.toLowerCase().includes(q));
+            if (!nameMatch && !menuMatch && !tagMatch) return false;
+          }
+          return true;
+        });
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full py-16 text-center bg-slate-950/40 rounded-3xl border border-slate-800/80">
+              <span class="text-4xl block mb-4">🔍</span>
+              <p class="text-slate-400 font-bold">조건에 일치하는 맛집이 없습니다.</p>
+              <p class="text-[11px] text-slate-500 mt-1">다른 검색 키워드를 입력하거나 카테고리 필터를 조정해보세요.</p>
+            </div>
+          `;
+          return;
+        }
+
+        filtered.forEach(item => {
+          const isAdded = state.itinerary.some(it => it.id === item.id);
+          const tagBadges = item.tags.map(t => `#${t}`).join(' ');
+
+          let catBadgeText = "";
+          let catBadgeStyle = "";
+          switch (item.category) {
+            case "korean": 
+              catBadgeText = "한식"; 
+              catBadgeStyle = "bg-sky-500/10 text-sky-400 border-sky-500/20"; 
+              break;
+            case "chinese": 
+              catBadgeText = "중식"; 
+              catBadgeStyle = "bg-rose-500/10 text-rose-400 border-rose-500/20"; 
+              break;
+            case "japanese": 
+              catBadgeText = "일식"; 
+              catBadgeStyle = "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"; 
+              break;
+            case "western": 
+              catBadgeText = "양식"; 
+              catBadgeStyle = "bg-purple-500/10 text-purple-400 border-purple-500/20"; 
+              break;
+            case "dessert": 
+              catBadgeText = "디저트"; 
+              catBadgeStyle = "bg-pink-500/10 text-pink-400 border-pink-500/20"; 
+              break;
+          }
+
+          const iconMarkup = item.nearSubway 
+            ? `<i data-lucide="train" class="w-3.5 h-3.5 text-emerald-400"></i>` 
+            : `<i data-lucide="car" class="w-3.5 h-3.5 text-amber-400"></i>`;
+
+          const buttonMarkup = isAdded 
+            ? `
+              <button 
+                onclick="toggleRestaurant(${item.id})"
+                class="text-xs font-bold py-2.5 px-4 rounded-xl transition duration-150 flex items-center space-x-1.5 shrink-0 cursor-pointer bg-white/10 text-indigo-300 border border-white/10 hover:bg-white/20"
+              >
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                <span>추가됨</span>
+              </button>
+            ` 
+            : `
+              <button 
+                onclick="toggleRestaurant(${item.id})"
+                class="text-xs font-bold py-2.5 px-4 rounded-xl transition duration-150 flex items-center space-x-1.5 shrink-0 cursor-pointer bg-indigo-500 hover:bg-indigo-600 text-white active:scale-95 shadow-lg shadow-indigo-500/10"
+              >
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>일정 추가</span>
+              </button>
+            `;
+
+          const cardHtml = `
+            <div id="restaurant-card-${item.id}" class="bg-white/5 backdrop-blur-sm rounded-3xl p-5 border border-white/10 hover:bg-white/10 hover:border-white/25 hover:shadow-2xl transition-all flex flex-col justify-between group">
+              <div>
+                <!-- Header elements -->
+                <div class="flex justify-between items-start gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-2xl bg-slate-950/40 border border-white/5 p-2.5 rounded-xl block group-hover:scale-110 transition-transform">
+                      ${item.icon}
+                    </span>
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded border ${catBadgeStyle}">
+                      ${catBadgeText}
+                    </span>
+                  </div>
+                  <span class="text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${
+                    item.nearSubway 
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  }">
+                    ${iconMarkup}
+                    <span>${item.subway}</span>
+                  </span>
+                </div>
+
+                <!-- Middle details description -->
+                <div class="mt-4">
+                  <h4 class="font-bold text-slate-100 text-base flex items-center gap-1.5">
+                    ${item.name}
+                  </h4>
+                  <p class="text-[11px] text-teal-400 font-bold mt-1">
+                    시그니처: ${item.menu}
+                  </p>
+                  <p class="text-xs text-slate-300 mt-2.5 leading-relaxed min-h-[3rem]">
+                    ${item.description}
+                  </p>
+                  <div class="text-[11px] text-slate-300 mt-3 bg-slate-950/40 p-2.5 rounded-xl border border-white/5 flex items-start gap-1.5">
+                    <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5"></i>
+                    <p>
+                      <strong class="text-indigo-400">꿀팁:</strong> ${item.tips}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer and Action button -->
+              <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                <span class="text-[10px] text-slate-500 font-medium truncate max-w-[150px]" title="${tagBadges}">
+                  ${tagBadges}
+                </span>
+                ${buttonMarkup}
+              </div>
+            </div>
+          `;
+          grid.insertAdjacentHTML('beforeend', cardHtml);
+        });
+
+        lucide.createIcons();
+      }
+
+      function renderItinerary() {
+        const container = document.getElementById('itineraryContainer');
+        const textStatus = document.getElementById('itineraryStatusText');
+        const clearBtn = document.getElementById('btnClearAll');
+        container.innerHTML = '';
+
+        if (state.itinerary.length === 0) {
+          textStatus.innerText = "맛집 카드에서 내 일정을 설계해 보세요";
+          clearBtn.classList.add('hidden');
+          container.innerHTML = `
+            <div class="py-16 text-center text-slate-500 flex flex-col items-center justify-center">
+              <i data-lucide="milestone" class="w-12 h-12 mb-3 text-slate-600 animate-pulse"></i>
+              <p class="text-xs font-bold text-slate-400">생성된 이동 경로 일정이 없습니다.</p>
+              <p class="text-[10px] mt-1 text-slate-500">맛집 카드에서 원하는 일정을 골라 담아보세요!</p>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+
+        textStatus.innerText = `현재 총 ${state.itinerary.length}개의 일정이 안전하게 기록되었습니다.`;
+        clearBtn.classList.remove('hidden');
+
+        // Render Start point
+        let itineraryHtml = `
+          <div class="flex items-center gap-3 bg-slate-950/40 border border-white/5 p-3 rounded-2xl">
+            <span class="bg-teal-500 text-slate-950 font-extrabold text-[11px] w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+              S
+            </span>
+            <div class="flex-grow">
+              <p class="font-bold text-xs text-teal-400">출발지 도착</p>
+              <p class="text-[10px] text-slate-400">대전역에 안전하게 진입합니다.</p>
+            </div>
+            <i data-lucide="map-pin" class="w-4 h-4 text-teal-400 shrink-0"></i>
+          </div>
+        `;
+
+        // Render added items
+        state.itinerary.forEach((item, index) => {
+          itineraryHtml += `
+            <div class="relative pt-3">
+              <!-- Vertical line connecting steps -->
+              <div class="absolute left-[13px] top-0 bottom-0 w-[2px] bg-indigo-500/20 z-0"></div>
+
+              <div class="relative z-10 flex items-center gap-3 bg-slate-950/40 border border-white/5 p-3.5 rounded-2xl shadow-md hover:border-white/15 hover:bg-slate-950/60 transition">
+                <span class="bg-indigo-500 text-white font-extrabold text-[11px] w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                  ${index + 1}
+                </span>
+                <span class="text-xl shrink-0">${item.icon}</span>
+                <div class="flex-grow min-w-0">
+                  <p class="font-bold text-xs text-slate-100 truncate">${item.name}</p>
+                  <p class="text-[10px] text-slate-400 truncate">시그니처: ${item.menu}</p>
+                </div>
+                <button 
+                  onclick="removeItineraryItem(${item.id})"
+                  class="text-slate-500 hover:text-rose-400 p-1 rounded-lg transition shrink-0 cursor-pointer"
+                  title="제거"
+                >
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = itineraryHtml;
+        lucide.createIcons();
+      }
+
+      // Exposed global function for onclick triggers
+      window.toggleRestaurant = function(id) {
+        const item = restaurants.find(r => r.id === id);
+        const exists = state.itinerary.some(it => it.id === id);
+
+        if (exists) {
+          state.itinerary = state.itinerary.filter(it => it.id !== id);
+          showToast(`'${item.name}' 일정이 일정표에서 제외되었습니다.`);
+        } else {
+          state.itinerary.push(item);
+          showToast(`'${item.name}' 일정이 성공적으로 추가되었습니다!`);
+        }
+
+        localStorage.setItem('daejeon_tour_itinerary', JSON.stringify(state.itinerary));
+        renderRestaurants();
+        renderItinerary();
+      }
+
+      window.removeItineraryItem = function(id) {
+        const itemToRemove = state.itinerary.find(item => item.id === id);
+        state.itinerary = state.itinerary.filter(item => item.id !== id);
+        localStorage.setItem('daejeon_tour_itinerary', JSON.stringify(state.itinerary));
+        renderRestaurants();
+        renderItinerary();
+        if (itemToRemove) {
+          showToast(`'${itemToRemove.name}' 일정이 삭제되었습니다.`);
+        }
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById('toastNotification');
+        const toastMsg = document.getElementById('toastMessage');
+        toastMsg.innerText = message;
+        toast.classList.remove('hidden');
+        
+        // Hide after 2.5 seconds
+        if (window.toastTimeout) clearTimeout(window.toastTimeout);
+        window.toastTimeout = setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 2500);
+      }
+
+      function handleCopyRoadmap() {
+        if (state.itinerary.length === 0) {
+          showToast("복사할 일정이 없습니다. 맛집을 먼저 추가해 주세요!");
+          return;
+        }
+
+        const departureName = departuresData[state.selectedDeparture]?.name || "안산시 📍";
+
+        let text = `✨ [대전 웰니스 맛투어 여행 일정표] ✨\n`;
+        text += `🛫 출발지: ${departureName}\n\n`;
+        text += `📍 추천 동선:\n`;
+        state.itinerary.forEach((item, index) => {
+          text += `👉 [Step ${index + 1}] ${item.name} (${item.icon})\n`;
+          text += `   - 시그니처: ${item.menu}\n`;
+          text += `   - 위치/대중교통: ${item.subway}\n`;
+          text += `   - 로컬 꿀팁: ${item.tips}\n\n`;
+        });
+        text += `💡 꿀팁: 맛집 이름을 네이버/카카오 지도에 검색하여 경로 탐색을 시작해 보세요!\n`;
+        text += `© 2026 대전 맛투어 디지털 가이드`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text)
+            .then(() => {
+              showToast("일정표가 클립보드에 성공적으로 복사되었습니다! 카톡이나 메모장에 붙여넣어 보세요.");
+            })
+            .catch(() => {
+              fallbackCopy(text);
+            });
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showToast("일정표가 클립보드에 성공적으로 복사되었습니다! 카톡이나 메모장에 붙여넣어 보세요.");
+        } catch (err) {
+          showToast("복사에 실패했습니다.");
+        }
+        document.body.removeChild(textArea);
+      }
+    </script>
+  </body>
+</html>
